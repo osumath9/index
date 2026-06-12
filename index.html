@@ -9,15 +9,16 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, onValue, set, onDisconnect } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // 🔥 선생님의 파이어베이스 설정 정보로 수정해 주세요!
-   const firebaseConfig = {
-    apiKey: "AIzaSyCdTOKdNG0NXOGVt8Rhn6f6dYr7oc_XZ0A",
-    authDomain: "meaning-of-graphs.firebaseapp.com",
-    projectId: "meaning-of-graphs",
-    storageBucket: "meaning-of-graphs.firebasestorage.app",
-    messagingSenderId: "908366432588",
-    appId: "1:908366432588:web:0596ebd12cfcbf63f227e9"
-  };
+// 🔥 선생님의 파이어베이스 설정 정보로 수정해 주세요!
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdTOKdNG0NXOGVt8Rhn6f6dYr7oc_XZ0A",
+            authDomain: "meaning-of-graphs.firebaseapp.com",
+            databaseURL: "https://meaning-of-graphs-default-rtdb.firebaseio.com",
+            projectId: "meaning-of-graphs",
+            storageBucket: "meaning-of-graphs.firebasestorage.app",
+            messagingSenderId: "908366432588",
+            appId: "1:908366432588:web:0596ebd12cfcbf63f227e9"
+        };
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
