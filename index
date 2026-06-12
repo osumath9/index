@@ -60,9 +60,9 @@
         <p class="text-sm text-slate-500 mt-2">선생님의 지시를 기다려 주세요.</p>
     </div>
 
-    <iframe id="frame-step1" src="graph-shape.html" class="hidden"></iframe>
-    <iframe id="frame-step2" src="graph-numeric.html" class="hidden"></iframe>
-    <iframe id="frame-step3" src="water-tank.html" class="hidden"></iframe>
+<iframe id="frame-step1" src="investigation of graph shapes.html" class="hidden"></iframe>
+<iframe id="frame-step2" src="drawing graph numerically.html" class="hidden"></iframe>
+<iframe id="frame-step3" src="filling a water tank.html" class="hidden"></iframe>
 
 </body>
 </html>
