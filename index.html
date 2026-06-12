@@ -9,7 +9,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, onValue, set, onDisconnect } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-// 🔥 선생님의 파이어베이스 설정 정보로 수정해 주세요!
+        // 🔥 선생님의 파이어베이스 설정 정보
         const firebaseConfig = {
             apiKey: "AIzaSyCdTOKdNG0NXOGVt8Rhn6f6dYr7oc_XZ0A",
             authDomain: "meaning-of-graphs.firebaseapp.com",
@@ -57,7 +57,7 @@
             });
             onDisconnect(myStatusRef).remove();
 
-            // 2. 실시간 화면 전환 감지 이벤트 (백그라운드에서 조용히 감지)
+            // 2. 실시간 화면 전환 감지 이벤트
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
                     set(myStatusRef, { id: studentId, name: studentName, status: "away", lastActive: Date.now() });
@@ -86,4 +86,35 @@
         };
     </script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 1
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #f3f4f6; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen bg-gray-100">
+
+    <div id="login-modal" class="bg-white p-8 rounded-lg shadow-md w-96 z-50">
+        <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">수학 탐구 수업 입장</h2>
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="student-id">학번</label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="student-id" type="text" placeholder="예: 10101">
+        </div>
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="student-name">이름</label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="student-name" type="text" placeholder="예: 홍길동">
+        </div>
+        <button onclick="startClass()" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            수업 입장하기
+        </button>
+    </div>
+
+    <div id="loading" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-40">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 mb-4"></div>
+        <p class="text-xl font-semibold text-gray-700">선생님의 화면 전환을 대기 중입니다...</p>
+    </div>
+
+    <iframe id="frame-step1" class="hidden absolute inset-0" src="investigation-of-graph-shapes.html"></iframe>
+    <iframe id="frame-step2" class="hidden absolute inset-0" src="drawing-graph-numerically.html"></iframe>
+    <iframe id="frame-step3" class="hidden absolute inset-0" src="filling-a-water-tank.html"></iframe>
+
+</body>
+</html>
