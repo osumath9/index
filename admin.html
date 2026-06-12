@@ -10,15 +10,14 @@
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
         // 파이어베이스 설정 (선생님의 정보로 수정하세요)
-        const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_CONFIG_API_KEY",
-            authDomain: "YOUR_FIREBASE_CONFIG_AUTH_DOMAIN",
-            databaseURL: "YOUR_FIREBASE_CONFIG_DATABASE_URL",
-            projectId: "YOUR_FIREBASE_CONFIG_PROJECT_ID",
-            storageBucket: "YOUR_FIREBASE_CONFIG_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_FIREBASE_CONFIG_MESSAGING_SENDER_ID",
-            appId: "YOUR_FIREBASE_CONFIG_APP_ID"
-        };
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdTOKdNG0NXOGVt8Rhn6f6dYr7oc_XZ0A",
+    authDomain: "meaning-of-graphs.firebaseapp.com",
+    projectId: "meaning-of-graphs",
+    storageBucket: "meaning-of-graphs.firebasestorage.app",
+    messagingSenderId: "908366432588",
+    appId: "1:908366432588:web:0596ebd12cfcbf63f227e9"
+  };
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
