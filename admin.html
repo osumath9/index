@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교사용 수업 제어 리모컨</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        // 파이어베이스 설정 (선생님의 정보로 수정하세요)
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_CONFIG_API_KEY",
+            authDomain: "YOUR_FIREBASE_CONFIG_AUTH_DOMAIN",
+            databaseURL: "YOUR_FIREBASE_CONFIG_DATABASE_URL",
+            projectId: "YOUR_FIREBASE_CONFIG_PROJECT_ID",
+            storageBucket: "YOUR_FIREBASE_CONFIG_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_FIREBASE_CONFIG_MESSAGING_SENDER_ID",
+            appId: "YOUR_FIREBASE_CONFIG_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const classStepRef = ref(database, 'currentStep');
+
+        // 현재 데이터베이스 상태를 리모컨 버튼에 시각화
+        onValue(classStepRef, (snapshot) => {
+            const currentStep = snapshot.val() || 1;
+            
+            // 모든 버튼 스타일 초기화
+            document.querySelectorAll('.btn-step').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'scale-105', 'ring-4', 'ring-blue-300');
+                btn.classList.add('bg-white', 'text-slate-700');
+            });
+
+            // 현재 활성화된 버튼 하이라이트
+            const activeBtn = document.getElementById(`btn-${currentStep}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-slate-700');
+                activeBtn.classList.add('bg-blue-600', 'text-white', 'scale-105', 'ring-4', 'ring-blue-300');
+            }
+        });
+
+        // 버튼 클릭 시 파이어베이스 값을 변경하는 함수를 전역 window에 바인딩
+        window.changeStep = function(stepNumber) {
+            set(classStepRef, stepNumber)
+                .then(() => console.log(`단계가 ${stepNumber}로 변경되었습니다.`))
+                .catch((error) => alert("오류 발생: " + error.message));
+        };
+    </script>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+        <h1 class="text-2xl font-black text-center text-slate-800 mb-2">수업 화면 실시간 리모컨</h1>
+        <p class="text-center text-sm text-slate-500 mb-8">버튼을 누르면 학생들의 화면이 즉시 전환됩니다.</p>
+
+        <div class="space-y-4">
+            <button id="btn-1" onclick="changeStep(1)" class="btn-step w-full py-4 px-6 text-left font-bold rounded-xl border border-slate-200 shadow-sm transition-all duration-200 flex justify-between items-center text-lg">
+                <span>1단계. 그래프 개형 탐구</span>
+                <span class="text-xs px-2 py-1 bg-slate-100 text-slate-500 rounded-md">활성화</span>
+            </button>
+
+            <button id="btn-2" onclick="changeStep(2)" class="btn-step w-full py-4 px-6 text-left font-bold rounded-xl border border-slate-200 shadow-sm transition-all duration-200 flex justify-between items-center text-lg">
+                <span>2단계. 그래프 수치적 접근</span>
+                <span class="text-xs px-2 py-1 bg-slate-100 text-slate-500 rounded-md">활성화</span>
+            </button>
+
+            <button id="btn-3" onclick="changeStep(3)" class="btn-step w-full py-4 px-6 text-left font-bold rounded-xl border border-slate-200 shadow-sm transition-all duration-200 flex justify-between items-center text-lg">
+                <span>3단계. 물통에 물 채우기</span>
+                <span class="text-xs px-2 py-1 bg-slate-100 text-slate-500 rounded-md">활성화</span>
+            </button>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+            <p class="text-xs text-slate-400">💡 팁: 하이러닝에는 학생용 통합주소(index.html)만 전송해 두세요.</p>
+        </div>
+    </div>
+</body>
+</html>
