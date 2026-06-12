@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>물통에 물 채우기 문제 완전 시각화</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <style>
+        .tab-btn {
+            transition: all 0.2s ease;
+        }
+        .tab-active {
+            background-color: #2563EB;
+            color: white;
+            border-color: #2563EB;
+        }
+        .tab-inactive {
+            background-color: #F3F4F6;
+            color: #4B5563;
+            border-color: #D1D5DB;
+        }
+        /* 퀴즈 아이템 호버 효과 */
+        .quiz-item-btn:hover:not(.matched) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen p-4 md:p-8 flex flex-col items-center">
+
+    <div class="max-w-6xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        
+        <!-- 대주제 타이틀 및 성취기준 안내 -->
+        <div class="bg-blue-600 text-white p-6">
+            <div class="flex items-start gap-4">
+                <div class="bg-white text-blue-600 font-black text-xl rounded-full w-10 h-10 flex items-center justify-center shrink-0">📊</div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold leading-snug">
+                        [중1 좌표평면과 그래프] 물통 모양에 따른 실시간 그래프 탐구하기
+                    </h1>
+                    <p class="text-blue-100 text-sm mt-1">
+                        성취기준: 다양한 상황을 그래프로 나타내고, 시간의 흐름에 따른 변화를 직관적으로 해석할 수 있다.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 md:p-8">
+            
+            <!-- 실시간 동적 피드백/발문 메시지 -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6 transition-colors duration-300" id="feedback-box">
+                <p id="feedback-msg" class="text-lg md:text-xl font-bold text-blue-800">
+                    원하는 물통의 모양을 선택하고 [물 채우기 시작] 버튼을 눌러 그래프의 개형 변화를 관찰해 보세요!
+                </p>
+            </div>
+
+            <!-- 메인 시각화 패널 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 justify-center items-center mb-8">
+                
+                <!-- 좌측: 입체 물통 단면 영역 -->
+                <div class="flex flex-col items-center">
+                    <h2 class="text-lg font-bold text-slate-600 mb-2">실시간 물통 내부의 높이 변화</h2>
+                    <div class="relative bg-slate-50 rounded-2xl border-2 border-slate-200 shadow-inner p-6 w-full max-w-[360px] flex justify-center">
+                        <canvas id="canvas-tank" width="280" height="340" class="block"></canvas>
+                    </div>
+                </div>
+
+                <!-- 우측: 수학 그래프 좌표 영역 -->
+                <div class="flex flex-col items-center">
+                    <h2 class="text-lg font-bold text-slate-600 mb-2">시간에 따른 물의 높이 그래프</h2>
+                    <div class="relative bg-white rounded-2xl border-2 border-slate-200 shadow-inner w-full max-w-[400px] aspect-square">
+                        <canvas id="canvas-graph" width="400" height="400" class="block w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 컨트롤 영역 -->
+            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col gap-6">
+                
+                <!-- 탭 1. 물통 모양 4종 선택기 -->
+                <div>
+                    <span class="text-lg font-bold mb-3 block text-slate-700">1. 탐구할 물통 모양 선택:</span>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button class="tab-btn tab-active border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape1">
+                            모양 (1)
+                        </button>
+                        <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape2">
+                            모양 (2)
+                        </button>
+                        <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape3">
+                            모양 (3)
+                        </button>
+                        <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape4">
+                            모양 (4)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 탭 2. 구동 조작 도구 -->
+                <div>
+                    <span class="text-lg font-bold mb-3 block text-slate-700">2. 시뮬레이션 제어:</span>
+                    <div class="flex flex-wrap gap-4">
+                        <button id="btn-play" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl text-xl shadow-md transition-colors">
+                            ▶ 물 채우기 시작
+                        </button>
+                        <!-- 새롭게 추가된 문제 풀어보기 버튼 (초기엔 비활성화) -->
+                        <button id="btn-quiz" class="flex-1 bg-slate-300 text-slate-500 font-bold py-4 px-6 rounded-xl text-xl shadow-md cursor-not-allowed transition-colors" disabled title="4가지 모양의 물통을 모두 시뮬레이션 하면 문제가 열립니다.">
+                            🔒 문제 풀어보기
+                        </button>
+                        <button id="btn-reset" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-4 px-6 rounded-xl text-xl shadow-md transition-colors">
+                            ↺ 초기화
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 문제 풀어보기 (짝맞추기 퀴즈) 모달창 -->
+    <div id="quiz-modal" class="hidden fixed inset-0 z-50 bg-slate-900/90 flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-4xl p-6 md:p-10 flex flex-col shadow-2xl max-h-[95vh] overflow-y-auto">
+            <h2 class="text-2xl md:text-3xl font-black text-slate-800 mb-2 text-center text-blue-600">도전! 물통과 그래프 짝맞추기</h2>
+            <p class="text-center text-slate-600 mb-6 font-medium">지금까지 관찰한 결과를 바탕으로, 알맞은 물통 모양과 그래프를 <b>각각 클릭하여</b> 짝지어 보세요!</p>
+            
+            <div class="flex flex-col md:flex-row justify-between gap-6 md:gap-12">
+                <!-- 좌측: 물통 리스트 -->
+                <div class="flex flex-col gap-4 w-full md:w-1/2">
+                    <h3 class="text-center font-bold text-slate-500">물통 모양</h3>
+                    <div id="quiz-tank-list" class="flex flex-col gap-3"></div>
+                </div>
+                <!-- 우측: 그래프 리스트 -->
+                <div class="flex flex-col gap-4 w-full md:w-1/2">
+                    <h3 class="text-center font-bold text-slate-500">높이 변화 그래프</h3>
+                    <div id="quiz-graph-list" class="flex flex-col gap-3"></div>
+                </div>
+            </div>
+
+            <div id="quiz-feedback" class="mt-8 text-center text-xl font-bold min-h-[32px] transition-all">
+                <!-- 짝맞추기 결과 피드백 텍스트 위치 -->
+            </div>
+
+            <div class="mt-8 text-center">
+                <button id="btn-close-quiz" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-4 px-10 rounded-xl shadow-md transition-colors text-lg">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // KaTeX 수학식 구동 초기화
+        renderMathInElement(document.body, {
+            delimiters: [ {left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false} ],
+            throwOnError: false
+        });
+
+        // ==========================================
+        // 전역 모델 데이터 및 DOM 요소 바인딩
+        // ==========================================
+        const MAX_TIME = 10;   // 애니메이션 총 기준 시간 (10초)
+
+        const WATER_MODELS = {
+            shape1: {
+                name: "모양 (1)",
+                maxH: 6, // 짧은 높이 반영
+                sections: [ { r: 75, h: 6 } ],
+                getH: (t) => {
+                    if (t <= 0) return 0;
+                    if (t >= MAX_TIME) return 6;
+                    return 6 * (t / MAX_TIME); // 완만 (기울기 0.6)
+                }
+            },
+            shape2: {
+                name: "모양 (2)",
+                maxH: 10, // 긴 높이 반영
+                sections: [ { r: 40, h: 10 } ],
+                getH: (t) => {
+                    if (t <= 0) return 0;
+                    if (t >= MAX_TIME) return 10;
+                    return 10 * (t / MAX_TIME); // 가파름 (기울기 1.0)
+                }
+            },
+            shape3: {
+                name: "모양 (3)",
+                maxH: 10,
+                sections: [ { r: 75, h: 5 }, { r: 40, h: 5 } ],
+                getH: (t) => {
+                    if (t <= 0) return 0;
+                    if (t <= 8.0) return 5.0 * (t / 8.0); // 완만
+                    if (t <= MAX_TIME) return 5.0 + 5.0 * ((t - 8.0) / 2.0); // 가파름
+                    return 10;
+                }
+            },
+            shape4: {
+                name: "모양 (4)",
+                maxH: 10,
+                sections: [ { r: 40, h: 5 }, { r: 75, h: 5 } ],
+                getH: (t) => {
+                    if (t <= 0) return 0;
+                    if (t <= 2.0) return 5.0 * (t / 2.0); // 가파름
+                    if (t <= MAX_TIME) return 5.0 + 5.0 * ((t - 2.0) / 8.0); // 완만
+                    return 10;
+                }
+            }
+        };
+
+        let currentShapeId = 'shape1';
+        let isPlaying = false;
+        let isFinished = false;
+        let t = 0;
+        let currentPoints = [];
+        let traces = [];
+        
+        // 4가지 모형을 모두 구동했는지 기록하는 Set
+        const completedShapes = new Set();
+        const traceColors = ['#10B981', '#EF4444', '#F59E0B', '#3B82F6'];
+
+        // DOM 객체 바인딩
+        const canvasTank = document.getElementById('canvas-tank');
+        const ctxTank = canvasTank.getContext('2d');
+        const canvasGraph = document.getElementById('canvas-graph');
+        const ctxGraph = canvasGraph.getContext('2d');
+        const btnPlay = document.getElementById('btn-play');
+        const btnQuiz = document.getElementById('btn-quiz');
+        const btnReset = document.getElementById('btn-reset');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+
+        function updateFeedback(msgHTML) {
+            feedbackMsg.innerHTML = msgHTML;
+            renderMathInElement(feedbackMsg, {
+                delimiters: [ {left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false} ],
+                throwOnError: false
+            });
+        }
+
+        // ==========================================
+        // 1. 물통 단면 실시간 3D 렌더링
+        // ==========================================
+        function drawTank() {
+            const w = canvasTank.width;
+            const h_canvas = canvasTank.height;
+            ctxTank.clearRect(0, 0, w, h_canvas);
+
+            const cx = w / 2;
+            const baseY = 300;
+            const pxPerCm = 24; 
+            const mapY = (h) => baseY - h * pxPerCm;
+
+            const model = WATER_MODELS[currentShapeId];
+            const sections = model.sections;
+            const currentH = model.getH(t);
+
+            ctxTank.save();
+
+            if (currentH > 0) {
+                let ch = 0;
+                for (let i = 0; i < sections.length; i++) {
+                    const sec = sections[i];
+                    const secWaterH = Math.max(0, Math.min(currentH - ch, sec.h));
+                    
+                    if (secWaterH > 0) {
+                        const yBottom = mapY(ch);
+                        const yTop = mapY(ch + secWaterH);
+                        
+                        const grad = ctxTank.createLinearGradient(0, mapY(currentH), 0, mapY(0));
+                        grad.addColorStop(0, 'rgba(59, 130, 246, 0.85)');
+                        grad.addColorStop(1, 'rgba(30, 58, 138, 0.95)');
+                        ctxTank.fillStyle = grad;
+                        
+                        ctxTank.fillRect(cx - sec.r, yTop, sec.r * 2, yBottom - yTop);
+                        
+                        if (i === 0 || sections[i].r > sections[i-1].r) {
+                            ctxTank.fillStyle = 'rgba(30, 58, 138, 0.95)';
+                            ctxTank.beginPath();
+                            ctxTank.ellipse(cx, yBottom, sec.r, sec.r * 0.15, 0, 0, Math.PI * 2);
+                            ctxTank.fill();
+                        }
+
+                        if (currentH > ch + sec.h && i < sections.length - 1 && sections[i+1].r < sec.r) {
+                            ctxTank.fillStyle = 'rgba(59, 130, 246, 0.8)'; 
+                            ctxTank.beginPath();
+                            ctxTank.ellipse(cx, mapY(ch + sec.h), sec.r, sec.r * 0.15, 0, 0, Math.PI * 2);
+                            ctxTank.fill();
+                            ctxTank.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                            ctxTank.lineWidth = 1;
+                            ctxTank.stroke();
+                        }
+                        
+                        if (currentH > ch && currentH <= ch + sec.h) {
+                            ctxTank.fillStyle = 'rgba(147, 197, 253, 0.95)';
+                            ctxTank.beginPath();
+                            ctxTank.ellipse(cx, yTop, sec.r, sec.r * 0.15, 0, 0, Math.PI * 2);
+                            ctxTank.fill();
+                            ctxTank.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctxTank.lineWidth = 1.5;
+                            ctxTank.stroke();
+                        }
+                    }
+                    ch += sec.h;
+                }
+            }
+            ctxTank.restore();
+
+            ctxTank.strokeStyle = '#4B5563';
+            ctxTank.lineWidth = 3.5;
+            ctxTank.beginPath();
+            ctxTank.ellipse(cx, mapY(0), sections[0].r, sections[0].r * 0.15, 0, 0, Math.PI * 2);
+            ctxTank.stroke();
+
+            let currH = 0;
+            for(let i=0; i<sections.length; i++) {
+                const sec = sections[i];
+                ctxTank.beginPath();
+                ctxTank.moveTo(cx - sec.r, mapY(currH)); ctxTank.lineTo(cx - sec.r, mapY(currH + sec.h));
+                ctxTank.moveTo(cx + sec.r, mapY(currH)); ctxTank.lineTo(cx + sec.r, mapY(currH + sec.h));
+                ctxTank.stroke();
+                
+                currH += sec.h;
+                
+                ctxTank.beginPath();
+                ctxTank.ellipse(cx, mapY(currH), sec.r, sec.r * 0.15, 0, 0, Math.PI * 2);
+                ctxTank.stroke();
+                
+                if (i < sections.length - 1) {
+                    const nextSec = sections[i+1];
+                    ctxTank.beginPath();
+                    ctxTank.moveTo(cx - sec.r, mapY(currH)); ctxTank.lineTo(cx - nextSec.r, mapY(currH));
+                    ctxTank.moveTo(cx + sec.r, mapY(currH)); ctxTank.lineTo(cx + nextSec.r, mapY(currH));
+                    ctxTank.stroke();
+                }
+            }
+        }
+
+        // ==========================================
+        // 2. 수학 그래프 좌표평면 렌더링
+        // ==========================================
+        function drawGraph() {
+            ctxGraph.clearRect(0, 0, 400, 400);
+
+            const padX = 50;
+            const padY = 50;
+            const graphW = 300;
+            const graphH = 300;
+
+            const mapX = (time) => padX + (time / MAX_TIME) * graphW;
+            const mapY = (height) => (400 - padY) - (height / 10) * graphH;
+
+            ctxGraph.strokeStyle = '#F3F4F6';
+            ctxGraph.lineWidth = 1;
+            ctxGraph.beginPath();
+            for(let i = 0; i <= 10; i++) {
+                ctxGraph.moveTo(mapX(0), mapY(i)); ctxGraph.lineTo(mapX(10), mapY(i));
+                ctxGraph.moveTo(mapX(i), mapY(0)); ctxGraph.lineTo(mapX(i), mapY(10));
+            }
+            ctxGraph.stroke();
+
+            ctxGraph.strokeStyle = '#374151';
+            ctxGraph.lineWidth = 2.5;
+            ctxGraph.beginPath();
+            ctxGraph.moveTo(mapX(0), mapY(10.5)); ctxGraph.lineTo(mapX(0), mapY(0));
+            ctxGraph.moveTo(mapX(0), mapY(0)); ctxGraph.lineTo(mapX(10.5), mapY(0));
+            ctxGraph.stroke();
+
+            ctxGraph.fillStyle = '#374151';
+            ctxGraph.beginPath();
+            ctxGraph.moveTo(mapX(10.5), mapY(0)); ctxGraph.lineTo(mapX(10.3), mapY(0)-5); ctxGraph.lineTo(mapX(10.3), mapY(0)+5);
+            ctxGraph.fill();
+            ctxGraph.beginPath();
+            ctxGraph.moveTo(mapX(0), mapY(10.5)); ctxGraph.lineTo(mapX(0)-5, mapY(10.3)); ctxGraph.lineTo(mapX(0)+5, mapY(10.3));
+            ctxGraph.fill();
+
+            ctxGraph.font = 'bold 16px sans-serif';
+            ctxGraph.fillText("O", mapX(0) - 18, mapY(0) + 18);
+            ctxGraph.fillText("시간 (x)", mapX(10.5) - 30, mapY(0) + 30);
+            ctxGraph.fillText("높이 (y)", mapX(0) - 20, mapY(10.5) - 15);
+
+            // 잔상(자동 기록된 흔적) 렌더링
+            traces.forEach((trace) => {
+                ctxGraph.save();
+                ctxGraph.strokeStyle = trace.color;
+                ctxGraph.lineWidth = 3;
+                ctxGraph.setLineDash([5, 5]);
+                ctxGraph.beginPath();
+                trace.points.forEach((pt, index) => {
+                    if (index === 0) ctxGraph.moveTo(mapX(pt.t), mapY(pt.h));
+                    else ctxGraph.lineTo(mapX(pt.t), mapY(pt.h));
+                });
+                ctxGraph.stroke();
+
+                if (trace.points.length > 0) {
+                    const last = trace.points[trace.points.length - 1];
+                    ctxGraph.fillStyle = trace.color;
+                    ctxGraph.font = 'bold 15px sans-serif';
+                    ctxGraph.fillText(trace.label, mapX(last.t) - 22, mapY(last.h) - 15);
+                }
+                ctxGraph.restore();
+            });
+
+            // 실시간 렌더링
+            if (currentPoints.length > 0) {
+                ctxGraph.strokeStyle = '#8B5CF6'; 
+                ctxGraph.lineWidth = 5;
+                ctxGraph.lineCap = 'round';
+                ctxGraph.lineJoin = 'round';
+                ctxGraph.beginPath();
+                currentPoints.forEach((pt, index) => {
+                    if (index === 0) ctxGraph.moveTo(mapX(pt.t), mapY(pt.h));
+                    else ctxGraph.lineTo(mapX(pt.t), mapY(pt.h));
+                });
+                ctxGraph.stroke();
+                
+                const lastPt = currentPoints[currentPoints.length - 1];
+                ctxGraph.fillStyle = '#8B5CF6';
+                ctxGraph.beginPath();
+                ctxGraph.arc(mapX(lastPt.t), mapY(lastPt.h), 7.5, 0, Math.PI * 2);
+                ctxGraph.fill();
+
+                ctxGraph.save();
+                ctxGraph.setLineDash([4, 4]);
+                ctxGraph.strokeStyle = 'rgba(139, 92, 246, 0.4)';
+                ctxGraph.lineWidth = 1.5;
+                ctxGraph.beginPath();
+                ctxGraph.moveTo(mapX(lastPt.t), mapY(0)); ctxGraph.lineTo(mapX(lastPt.t), mapY(lastPt.h));
+                ctxGraph.moveTo(mapX(0), mapY(lastPt.h)); ctxGraph.lineTo(mapX(lastPt.t), mapY(lastPt.h));
+                ctxGraph.stroke();
+                ctxGraph.restore();
+            }
+        }
+
+        // ==========================================
+        // 3. 루프 (자동 기록 및 퀴즈 활성화 처리)
+        // ==========================================
+        let reqId = null;
+        let lastTimestamp = null;
+
+        function loop(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const dt = ((timestamp - lastTimestamp) / 1000) * 1.4; 
+            lastTimestamp = timestamp;
+
+            if (isPlaying) {
+                t += dt;
+                const model = WATER_MODELS[currentShapeId];
+                
+                if (t >= MAX_TIME) {
+                    t = MAX_TIME; 
+                    isPlaying = false;
+                    isFinished = true;
+                    
+                    const finalH = model.getH(MAX_TIME);
+                    currentPoints.push({ t, h: finalH });
+                    
+                    // --- 흔적 자동 남기기 ---
+                    if (!traces.some(tr => tr.shape === currentShapeId)) {
+                        const colorIdx = traces.length % traceColors.length;
+                        let labelText = "";
+                        if (currentShapeId === 'shape1') labelText = "(1)";
+                        else if (currentShapeId === 'shape2') labelText = "(2)";
+                        else if (currentShapeId === 'shape3') labelText = "(3)";
+                        else labelText = "(4)";
+
+                        traces.push({
+                            shape: currentShapeId,
+                            label: labelText,
+                            color: traceColors[colorIdx],
+                            points: [...currentPoints]
+                        });
+                        completedShapes.add(currentShapeId); // 구동 완료 세트에 등록
+                    } else {
+                        // 이미 있다면 점 데이터만 갱신
+                        const tr = traces.find(t => t.shape === currentShapeId);
+                        tr.points = [...currentPoints];
+                    }
+
+                    drawTank(); drawGraph();
+                    
+                    // 상태 피드백 메시지 생성 및 문제풀이 버튼 활성화
+                    let fbText = `<strong>${model.name}</strong>에 물이 가득 찼습니다! <span class="text-purple-600">(그래프 흔적이 자동 저장되었습니다)</span>`;
+                    
+                    if (completedShapes.size === 4) {
+                        btnQuiz.disabled = false;
+                        btnQuiz.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
+                        btnQuiz.classList.add('bg-green-600', 'hover:bg-green-700', 'text-white');
+                        btnQuiz.innerHTML = '🎯 문제 풀어보기';
+                        
+                        fbText += `<br><span class="text-green-600">4가지 모양을 모두 관찰하셨군요! 우측 하단의 [문제 풀어보기]를 클릭해 실력을 확인하세요.</span>`;
+                    } else {
+                        fbText += `<br>다른 탭을 눌러 남은 물통들의 그래프 개형도 확인해 보세요.`;
+                    }
+                    
+                    updateFeedback(fbText);
+                    btnPlay.innerHTML = "▶ 다시 채우기";
+                    reqId = null;
+                    return; 
+                }
+
+                currentPoints.push({ t, h: model.getH(t) });
+                drawTank(); drawGraph();
+            }
+            reqId = requestAnimationFrame(loop);
+        }
+
+        // ==========================================
+        // 4. 이벤트 리스너
+        // ==========================================
+        btnPlay.addEventListener('click', () => {
+            if (isFinished) {
+                t = 0; currentPoints = []; isFinished = false;
+            }
+            isPlaying = !isPlaying;
+            const model = WATER_MODELS[currentShapeId];
+            
+            if (isPlaying) {
+                btnPlay.innerHTML = "⏸ 일시정지";
+                updateFeedback(`현재 <strong>${model.name}</strong>에 물이 차오르고 있습니다...`);
+                lastTimestamp = null;
+                if (!reqId) reqId = requestAnimationFrame(loop);
+            } else {
+                btnPlay.innerHTML = "▶ 계속하기";
+                updateFeedback("일시정지되었습니다. 그래프 상의 경사나 꺾인 부분을 확인해 보세요.");
+            }
+        });
+
+        // 초기화 버튼 클릭 (모든 데이터 리셋)
+        btnReset.addEventListener('click', () => {
+            isPlaying = false; isFinished = false;
+            t = 0; currentPoints = []; traces = [];
+            completedShapes.clear();
+            
+            // 문제풀이 버튼 비활성화 복귀
+            btnQuiz.disabled = true;
+            btnQuiz.classList.add('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
+            btnQuiz.classList.remove('bg-green-600', 'hover:bg-green-700', 'text-white');
+            btnQuiz.innerHTML = '🔒 문제 풀어보기';
+
+            btnPlay.innerHTML = "▶ 물 채우기 시작";
+            drawTank(); drawGraph();
+            updateFeedback("모든 시뮬레이션 기록이 초기화되었습니다. 원하는 모양을 다시 선택해 보세요.");
+            if (reqId) { cancelAnimationFrame(reqId); reqId = null; }
+        });
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                tabBtns.forEach(b => {
+                    b.classList.remove('tab-active'); b.classList.add('tab-inactive');
+                });
+                const targetBtn = e.currentTarget;
+                targetBtn.classList.remove('tab-inactive'); targetBtn.classList.add('tab-active');
+
+                currentShapeId = targetBtn.getAttribute('data-shape');
+                isPlaying = false; isFinished = false;
+                t = 0; currentPoints = [];
+
+                btnPlay.innerHTML = "▶ 물 채우기 시작";
+                drawTank(); drawGraph();
+
+                if (currentShapeId === 'shape1') updateFeedback("<strong>모양 (1)</strong> 물통입니다. 폭이 넓으면 물은 천천히 차오르게 됩니다. 그래프의 기울기를 주목하세요!");
+                else if (currentShapeId === 'shape2') updateFeedback("<strong>모양 (2)</strong> 물통입니다. 모양 (1)에 비해 수면이 빠르게 상승하여 기울기가 가파르게 나타납니다.");
+                else if (currentShapeId === 'shape3') updateFeedback("<strong>모양 (3)</strong> 계단식 물통입니다. 폭이 변하는 순간 그래프는 어떻게 꺾일까요?");
+                else if (currentShapeId === 'shape4') updateFeedback("<strong>모양 (4)</strong> 계단식 물통입니다. 모양 (3)과 기울기 변화가 어떻게 반대인지 관찰해 보세요.");
+            });
+        });
+
+        // ==========================================
+        // 5. 짝맞추기 퀴즈 로직
+        // ==========================================
+        const quizTanks = [
+            { id: 'shape1', label: '모양 (1)', path: 'M15,50 L85,50 L85,90 L15,90 Z' },
+            { id: 'shape2', label: '모양 (2)', path: 'M35,10 L65,10 L65,90 L35,90 Z' },
+            { id: 'shape3', label: '모양 (3)', path: 'M35,10 L65,10 L65,50 L85,50 L85,90 L15,90 L15,50 L35,50 Z' },
+            { id: 'shape4', label: '모양 (4)', path: 'M15,10 L85,10 L85,50 L65,50 L65,90 L35,90 L35,50 L15,50 Z' }
+        ];
+
+        // 각 모형에 해당하는 간략화된 정답 그래프 벡터 (X축 시간, Y축 높이)
+        const quizGraphs = [
+            { id: 'shape1', path: 'M 10 90 L 90 40' }, // 완만한 직선
+            { id: 'shape2', path: 'M 10 90 L 50 10' }, // 가파른 직선
+            { id: 'shape3', path: 'M 10 90 L 60 60 L 90 10' }, // 완만하다가 가파름
+            { id: 'shape4', path: 'M 10 90 L 40 40 L 90 10' }  // 가파르다가 완만
+        ];
+
+        let selectedQuizTank = null;
+        let selectedQuizGraph = null;
+        let matchedCount = 0;
+
+        function renderQuiz() {
+            const tankList = document.getElementById('quiz-tank-list');
+            const graphList = document.getElementById('quiz-graph-list');
+            tankList.innerHTML = '';
+            graphList.innerHTML = '';
+
+            // 물통(왼쪽) 그리기
+            quizTanks.forEach(tank => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-item-btn flex items-center justify-between p-4 border-4 border-slate-200 rounded-2xl bg-slate-50 transition-all';
+                btn.dataset.type = 'tank';
+                btn.dataset.id = tank.id;
+                btn.innerHTML = `
+                    <span class="font-black text-xl text-slate-700 w-24">${tank.label}</span>
+                    <svg viewBox="0 0 100 100" class="w-16 h-16 mr-4">
+                        <path d="${tank.path}" fill="#BFDBFE" stroke="#4B5563" stroke-width="3"/>
+                    </svg>
+                `;
+                btn.onclick = () => handleQuizSelect('tank', tank.id, btn);
+                tankList.appendChild(btn);
+            });
+
+            // 그래프(오른쪽) 그리기 - 순서 무작위 섞기
+            const shuffledGraphs = [...quizGraphs].sort(() => Math.random() - 0.5);
+            shuffledGraphs.forEach(graph => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-item-btn flex items-center justify-center p-4 border-4 border-slate-200 rounded-2xl bg-slate-50 transition-all';
+                btn.dataset.type = 'graph';
+                btn.dataset.id = graph.id;
+                btn.innerHTML = `
+                    <svg viewBox="0 0 100 100" class="w-20 h-20">
+                        <path d="M 10 10 L 10 90 L 90 90" stroke="#9CA3AF" stroke-width="2" fill="none"/>
+                        <path d="${graph.path}" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                `;
+                btn.onclick = () => handleQuizSelect('graph', graph.id, btn);
+                graphList.appendChild(btn);
+            });
+        }
+
+        function handleQuizSelect(type, id, btnElement) {
+            // 이미 매칭된 버튼은 무시
+            if (btnElement.classList.contains('matched')) return;
+
+            // 같은 타입(물통/그래프) 내에서 기존 선택 스타일 제거
+            document.querySelectorAll(`.quiz-item-btn[data-type="${type}"]`).forEach(btn => {
+                if (!btn.classList.contains('matched')) {
+                    btn.classList.remove('border-blue-500', 'bg-blue-50');
+                    btn.classList.add('border-slate-200', 'bg-slate-50');
+                }
+            });
+
+            // 현재 선택한 요소 스타일 강조
+            btnElement.classList.remove('border-slate-200', 'bg-slate-50');
+            btnElement.classList.add('border-blue-500', 'bg-blue-50');
+
+            if (type === 'tank') selectedQuizTank = { id, btn: btnElement };
+            else selectedQuizGraph = { id, btn: btnElement };
+
+            // 둘 다 선택되었을 때 정답 확인 로직
+            if (selectedQuizTank && selectedQuizGraph) {
+                const fbDiv = document.getElementById('quiz-feedback');
+                
+                if (selectedQuizTank.id === selectedQuizGraph.id) {
+                    // 정답 매칭 성공!
+                    [selectedQuizTank.btn, selectedQuizGraph.btn].forEach(b => {
+                        b.classList.replace('border-blue-500', 'border-green-500');
+                        b.classList.replace('bg-blue-50', 'bg-green-100');
+                        b.classList.add('matched', 'cursor-not-allowed', 'opacity-50');
+                    });
+
+                    matchedCount++;
+                    fbDiv.innerHTML = `<span class="text-green-600">정답입니다! 올바르게 연결하셨어요. 👏</span>`;
+
+                    if (matchedCount === 4) {
+                        fbDiv.innerHTML = `<span class="text-green-600 font-extrabold text-2xl">🎉 모든 짝을 맞추었습니다! 완벽해요! 🎉</span>`;
+                    }
+                } else {
+                    // 오답 매칭
+                    [selectedQuizTank.btn, selectedQuizGraph.btn].forEach(b => {
+                        b.classList.replace('border-blue-500', 'border-red-500');
+                        b.classList.replace('bg-blue-50', 'bg-red-100');
+                    });
+                    
+                    fbDiv.innerHTML = `<span class="text-red-600">앗, 틀렸습니다. 물통의 폭과 기울기를 다시 생각해보세요!</span>`;
+
+                    // 0.8초 후 빨간색 실패 피드백 초기화
+                    const tBtn = selectedQuizTank.btn;
+                    const gBtn = selectedQuizGraph.btn;
+                    
+                    setTimeout(() => {
+                        if (!tBtn.classList.contains('matched')) {
+                            tBtn.classList.remove('border-red-500', 'bg-red-100');
+                            tBtn.classList.add('border-slate-200', 'bg-slate-50');
+                        }
+                        if (!gBtn.classList.contains('matched')) {
+                            gBtn.classList.remove('border-red-500', 'bg-red-100');
+                            gBtn.classList.add('border-slate-200', 'bg-slate-50');
+                        }
+                        if (fbDiv.innerHTML.includes('틀렸습니다')) fbDiv.innerHTML = '';
+                    }, 800);
+                }
+
+                // 다음 선택을 위해 초기화
+                selectedQuizTank = null;
+                selectedQuizGraph = null;
+            }
+        }
+
+        // 문제 풀어보기 모달 제어
+        btnQuiz.addEventListener('click', () => {
+            matchedCount = 0;
+            selectedQuizTank = null;
+            selectedQuizGraph = null;
+            document.getElementById('quiz-feedback').innerHTML = '';
+            renderQuiz(); // 퀴즈 랜덤 배치 및 렌더링
+            document.getElementById('quiz-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-close-quiz').addEventListener('click', () => {
+            document.getElementById('quiz-modal').classList.add('hidden');
+        });
+
+        window.onload = () => {
+            updateFeedback("<strong>모양 (1)</strong> 물통입니다. 폭이 넓으면 물은 천천히 차오르게 됩니다. 그래프의 기울기를 주목하세요!");
+            drawTank(); drawGraph();
+        };
+
+    </script>
+</body>
+</html>
