@@ -7,10 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getDatabase, ref, onValue, set, onDisconnect } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // 파이어베이스 설정 (선생님의 정보로 수정하세요)
-   const firebaseConfig = {
+        // 🔥 선생님의 파이어베이스 설정 정보로 수정해 주세요!
+    const firebaseConfig = {
     apiKey: "AIzaSyCdTOKdNG0NXOGVt8Rhn6f6dYr7oc_XZ0A",
     authDomain: "meaning-of-graphs.firebaseapp.com",
     projectId: "meaning-of-graphs",
@@ -19,50 +19,70 @@
     appId: "1:908366432588:web:0596ebd12cfcbf63f227e9"
   };
 
-        // Firebase 초기화
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
-        const classStepRef = ref(database, 'currentStep');
+        
+        let studentId = ""; 
+        let studentName = "";
+        let myStatusRef = null;
 
-        // 요소 가져오기
-        const loadingEl = document.getElementById('loading');
-        const frames = {
-            1: document.getElementById('frame-step1'),
-            2: document.getElementById('frame-step2'),
-            3: document.getElementById('frame-step3')
-        };
+        // 로그인 확인 및 상태 관리 시작
+        window.startClass = function() {
+            const idInput = document.getElementById('student-id').value.trim();
+            const nameInput = document.getElementById('student-name').value.trim();
 
-        // 실시간 데이터베이스 감시 (선생님이 단계를 바꾸면 실시간으로 실행됨)
-        onValue(classStepRef, (snapshot) => {
-            const step = snapshot.val() || 1; // 값이 없으면 기본 1단계
-            
-            // 로딩 메시지 숨기기
-            loadingEl.classList.add('hidden');
-
-            // 모든 프레임 숨기기
-            Object.values(frames).forEach(frame => frame.classList.add('hidden'));
-
-            // 선택된 단계의 프레임만 보여주기
-            if (frames[step]) {
-                frames[step].classList.remove('hidden');
+            if (!idInput || !nameInput) {
+                alert("학번과 이름을 모두 입력해 주세요.");
+                return;
             }
-        });
+
+            studentId = idInput;
+            studentName = nameInput;
+            
+            // 학생 고유 키 생성
+            const studentKey = `${studentId}_${studentName}`;
+            myStatusRef = ref(database, `students/${studentKey}`);
+
+            // 로그인 모달 닫고 로딩/대기 화면 표시
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            // 1. 온라인 상태 설정
+            set(myStatusRef, {
+                id: studentId,
+                name: studentName,
+                status: "online",
+                lastActive: Date.now()
+            });
+            onDisconnect(myStatusRef).remove();
+
+            // 2. 실시간 화면 전환 감지 이벤트 (백그라운드에서 조용히 감지)
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    set(myStatusRef, { id: studentId, name: studentName, status: "away", lastActive: Date.now() });
+                } else {
+                    set(myStatusRef, { id: studentId, name: studentName, status: "online", lastActive: Date.now() });
+                }
+            });
+
+            // 3. 교사 리모컨 신호 감시
+            const classStepRef = ref(database, 'currentStep');
+            const loadingEl = document.getElementById('loading');
+            const frames = {
+                1: document.getElementById('frame-step1'),
+                2: document.getElementById('frame-step2'),
+                3: document.getElementById('frame-step3')
+            };
+
+            onValue(classStepRef, (snapshot) => {
+                const step = snapshot.val() || 1;
+                loadingEl.classList.add('hidden');
+                Object.values(frames).forEach(frame => frame.classList.add('hidden'));
+                if (frames[step]) {
+                    frames[step].classList.remove('hidden');
+                }
+            });
+        };
     </script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-        iframe { width: 100%; height: 100%; border: none; }
-    </style>
-</head>
-<body class="bg-slate-100 flex items-center justify-center">
-
-    <div id="loading" class="text-center z-50">
-        <p class="text-xl font-bold text-slate-700 animate-pulse">수업 환경을 연결하고 있습니다...</p>
-        <p class="text-sm text-slate-500 mt-2">선생님의 지시를 기다려 주세요.</p>
-    </div>
-
-<iframe id="frame-step1" src="investigation-of-graph-shapes.html" class="hidden"></iframe>
-<iframe id="frame-step2" src="drawing-graph-numerically.html" class="hidden"></iframe>
-<iframe id="frame-step3" src="filling-a-water-tank.html" class="hidden"></iframe>
-
-</body>
-</html>
+        body, html { margin: 0; padding: 0; width: 100%; height: 1
