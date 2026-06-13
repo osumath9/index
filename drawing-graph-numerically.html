@@ -21,75 +21,66 @@
             user-select: none;
         }
 
-        /* 캔버스가 부모 영역을 100% 채우고 크기 계산 오차를 막기 위해 absolute 적용 */
         #canvas-container { position: relative; }
         #math-canvas {
             position: absolute;
             inset: 0;
             width: 100%;
             height: 100%;
-            touch-action: none; /* S펜 및 터치 드래그 시 스크롤 방지 */
+            touch-action: none; 
             display: block;
             -webkit-user-drag: none;
         }
 
-        /* 단계별 커서 모양 변경 */
         canvas.mode-disabled { cursor: not-allowed; }
-        /* 점 찍기: 파란색 십자/원 커서 */
         canvas.mode-plot { 
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="blue" stroke="white" stroke-width="2"/></svg>') 12 12, crosshair; 
         }
-        /* 선 긋기: 펜 모양 커서 */
         canvas.mode-draw {
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>') 0 24, pointer;
         }
 
-        /* 스크롤바 숨기기 (표 부분) */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<!-- h-[100dvh]를 사용하여 태블릿/모바일 주소창을 제외한 실제 화면 크기에 딱 맞춤 -->
 <body class="bg-gray-100 text-gray-800 font-sans h-[100dvh] flex flex-col overflow-hidden">
 
-    <!-- 상단 헤더 (여백을 최소화하여 공간 확보) -->
-    <header class="bg-white shadow-sm p-2 flex flex-row justify-between items-center z-10 shrink-0 gap-2">
-        <!-- 좌측: 상황 선택 -->
-        <div class="flex items-center gap-2">
-            <label for="situation-selector" class="font-bold text-gray-700 text-sm whitespace-nowrap hidden sm:block">상황 선택:</label>
-            <select id="situation-selector" class="border border-gray-300 rounded p-1 text-sm font-semibold bg-blue-50 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[200px] sm:max-w-none">
-                <!-- JS에서 동적 생성 -->
-            </select>
+    <!-- 상단 헤더 (제목 및 상황 선택 버튼) -->
+    <header class="bg-white shadow-sm p-2 md:p-3 flex flex-col gap-2 md:gap-3 z-10 shrink-0">
+        
+        <!-- 타이틀 & 리셋 버튼 라인 -->
+        <div class="flex justify-between items-center w-full px-1">
+            <h1 class="text-lg md:text-xl font-bold text-blue-800">그래프 그리기</h1>
+            <div class="flex gap-2">
+                <button id="btn-retry-step" class="px-2 py-1 md:px-3 md:py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border border-yellow-300 rounded text-xs md:text-sm font-bold transition-colors">
+                    현재 단계 다시
+                </button>
+                <button id="btn-reset-all" class="px-2 py-1 md:px-3 md:py-1.5 bg-red-100 hover:bg-red-200 text-red-800 border border-red-300 rounded text-xs md:text-sm font-bold transition-colors">
+                    처음부터
+                </button>
+            </div>
         </div>
 
-        <!-- 중앙: 타이틀 (태블릿에서 보임) -->
-        <h1 class="text-lg font-bold text-blue-800 hidden md:block">그래프 그리기</h1>
-
-        <!-- 우측: 제어 버튼 -->
-        <div class="flex gap-2">
-            <button id="btn-retry-step" class="px-2 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border border-yellow-300 rounded text-xs sm:text-sm font-bold transition-colors">
-                현재 단계 다시
-            </button>
-            <button id="btn-reset-all" class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-800 border border-red-300 rounded text-xs sm:text-sm font-bold transition-colors">
-                처음부터
-            </button>
+        <!-- 가로형 5가지 상황 버튼 -->
+        <div id="situation-buttons" class="flex flex-wrap justify-start sm:justify-center gap-1.5 md:gap-2 px-1">
+            <!-- JS에서 동적 생성 -->
         </div>
     </header>
 
     <!-- 메인 컨텐츠 영역 -->
     <main class="flex-1 flex flex-col overflow-hidden p-1.5 md:p-2 gap-1.5 md:gap-2 relative">
         
-        <!-- 상단: 상황 설명 영역 (패딩 압축) -->
+        <!-- 상단: 상황 설명 영역 -->
         <div class="bg-yellow-50 rounded-lg shadow-sm p-1.5 md:p-2 shrink-0 border border-yellow-200 flex items-center gap-2 md:gap-3">
-            <div id="situation-icon" class="text-2xl md:text-3xl shrink-0 drop-shadow-md ml-2"></div>
-            <p id="situation-desc" class="text-sm md:text-base text-black leading-snug font-semibold m-0 flex-1"></p>
+            <div id="situation-icon" class="text-xl md:text-2xl shrink-0 drop-shadow-md ml-1 md:ml-2"></div>
+            <p id="situation-desc" class="text-xs md:text-sm text-black leading-snug font-semibold m-0 flex-1"></p>
         </div>
 
-        <!-- 중단: 가로형 표 & 제어 버튼 (패딩 압축) -->
-        <div class="bg-white rounded-lg shadow-sm p-1.5 md:p-2 shrink-0 flex flex-row items-center gap-2 border border-gray-200">
-            <!-- 표 영역 -->
+        <!-- 중단: 가로형 표 (세로 길이 압축) -->
+        <div class="bg-white rounded-lg shadow-sm p-1 md:p-2 shrink-0 flex flex-row items-center gap-2 border border-gray-200">
             <div class="flex-1 w-full overflow-x-auto no-scrollbar">
-                <table class="w-full text-center border-collapse text-xs md:text-sm table-fixed min-w-[280px]">
+                <table class="w-full text-center border-collapse text-[11px] md:text-xs table-fixed min-w-[280px]">
                     <tr id="row-x">
                         <!-- JS에서 동적 생성됨 -->
                     </tr>
@@ -98,23 +89,23 @@
                     </tr>
                 </table>
             </div>
-            <!-- 다목적 제어 버튼 (표 채우기 / 정답 확인) -->
-            <div id="btn-container-reveal" class="shrink-0 flex justify-center">
-                <button id="btn-action" class="px-3 py-1.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-1.5 whitespace-nowrap">
+            <!-- 표 채우기 버튼 -->
+            <div id="btn-container-reveal" class="shrink-0 flex justify-center px-1">
+                <button id="btn-action" class="px-2 py-1.5 md:px-3 md:py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm font-bold rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-1 whitespace-nowrap">
                     <span>표 채우기</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                 </button>
             </div>
         </div>
 
-        <!-- 하단: 좌표평면 캔버스 (최대 공간 확보) -->
+        <!-- 하단: 좌표평면 캔버스 (크기 조절 반영) -->
         <div class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" id="canvas-container">
             <canvas id="math-canvas" class="bg-gray-50 mode-disabled"></canvas>
             
             <!-- 팝업 오버레이 -->
             <div id="overlay" class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 transition-opacity duration-300 z-20 hidden opacity-0">
                 <div id="overlay-message" class="bg-white px-5 py-4 md:px-6 md:py-5 rounded-2xl shadow-2xl text-center max-w-md transform scale-90 transition-transform duration-300 border-4 border-blue-400">
-                    <p id="overlay-text" class="text-base md:text-lg font-bold text-gray-800 leading-relaxed"></p>
+                    <p id="overlay-text" class="text-sm md:text-base font-bold text-gray-800 leading-relaxed"></p>
                 </div>
             </div>
         </div>
@@ -128,35 +119,31 @@
     function playSuccessSound() {
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return; // 미지원 브라우저 방어
+            if (!AudioContext) return;
             
-            const ctx = new AudioContext();
-            
-            // 음표를 연주하는 내부 함수
+            const audioCtx = new AudioContext();
             const playNote = (frequency, startTime, duration) => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
                 
-                osc.type = 'sine'; // 부드러운 소리
+                osc.type = 'sine';
                 osc.frequency.setValueAtTime(frequency, startTime);
                 
-                // 소리가 부드럽게 커졌다가 작아지도록 설정 (Fade in/out)
                 gain.gain.setValueAtTime(0, startTime);
-                gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05); // 어택
-                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration); // 릴리즈
+                gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
                 
                 osc.connect(gain);
-                gain.connect(ctx.destination);
+                gain.connect(audioCtx.destination);
                 
                 osc.start(startTime);
                 osc.stop(startTime + duration);
             };
 
-            const now = ctx.currentTime;
-            // 미(E5) - 솔#(G#5) - 시(B5) 화음 순서로 "띠-로-링" 효과
-            playNote(659.25, now, 0.15);         // 띠 (E5)
-            playNote(830.61, now + 0.12, 0.15);  // 로 (G#5)
-            playNote(1318.51, now + 0.24, 0.4);  // 링~ (E6) 길게 여운
+            const now = audioCtx.currentTime;
+            playNote(659.25, now, 0.15);         // 미 (E5)
+            playNote(830.61, now + 0.12, 0.15);  // 솔# (G#5)
+            playNote(1318.51, now + 0.24, 0.4);  // 시 (B5)
             
         } catch (e) {
             console.error("Audio playback failed:", e);
@@ -248,7 +235,8 @@
                 axis: { xMin: -1, xMax: 13, yMin: -2, yMax: 20 },
                 grid: { xStep: 1, yStep: 2 }
             }
-        ]
+        ],
+        snapTolerancePx: 50 
     };
 
     /* =====================================================================
@@ -285,21 +273,23 @@
        초기화 및 공통 로직
        --------------------------------------------------------------------- */
     function init() {
-        const selector = document.getElementById('situation-selector');
+        // 상단 가로 버튼 생성 (드롭다운 대체)
+        const btnWrapper = document.getElementById('situation-buttons');
+        btnWrapper.innerHTML = '';
         CONFIG.situations.forEach((sit, idx) => {
-            const option = document.createElement('option');
-            option.value = idx; option.textContent = sit.title;
-            selector.appendChild(option);
+            const btn = document.createElement('button');
+            btn.id = `sit-btn-${idx}`;
+            // 모바일에서 너무 길어지지 않게 제목 그대로 사용
+            btn.textContent = sit.title;
+            btn.className = "px-3 py-1 text-xs md:text-sm rounded-full border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-blue-50 hover:text-blue-700 transition-colors";
+            btn.onclick = () => loadSituation(idx);
+            btnWrapper.appendChild(btn);
         });
-        
-        selector.addEventListener('change', (e) => loadSituation(parseInt(e.target.value)));
         
         document.getElementById('btn-reset-all').addEventListener('click', () => loadSituation(currentSitIdx));
         document.getElementById('btn-retry-step').addEventListener('click', retryCurrentStep);
         
         window.addEventListener('resize', resizeCanvas);
-        
-        // S펜 지원 및 터치 이벤트를 위해 Pointer Event 대신 안정적인 Mouse/Touch 혼용 사용
         canvas.addEventListener('mousedown', handleInteractStart);
         window.addEventListener('mousemove', handleInteractMove);
         window.addEventListener('mouseup', handleInteractEnd);
@@ -307,7 +297,6 @@
         window.addEventListener('touchmove', handleInteractMove, {passive: false});
         window.addEventListener('touchend', handleInteractEnd);
 
-        // 오버레이 클릭 시 닫기
         overlay.addEventListener('click', () => hideOverlay());
 
         setTimeout(() => loadSituation(0), 50); 
@@ -317,6 +306,18 @@
         currentSitIdx = index;
         const sit = CONFIG.situations[currentSitIdx];
         
+        // 활성화된 버튼 스타일 지정
+        CONFIG.situations.forEach((_, idx) => {
+            const btn = document.getElementById(`sit-btn-${idx}`);
+            if(btn) {
+                if (idx === index) {
+                    btn.className = "px-3 py-1 text-xs md:text-sm rounded-full border-2 border-blue-600 bg-blue-600 text-white font-bold shadow-sm transition-colors";
+                } else {
+                    btn.className = "px-3 py-1 text-xs md:text-sm rounded-full border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-blue-50 hover:text-blue-700 transition-colors";
+                }
+            }
+        });
+
         state.hiddenIndices = [];
         sit.data.forEach((d, i) => { if(d.hidden) state.hiddenIndices.push(i); });
         
@@ -338,14 +339,14 @@
         
         buildHorizontalTable();
         
-        btnAction.innerHTML = `<span>표 채우기</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>`;
-        btnAction.className = "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-1.5 whitespace-nowrap w-full md:w-auto";
+        btnAction.innerHTML = `<span>표 채우기</span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>`;
+        btnAction.className = "px-2 py-1.5 md:px-3 md:py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm font-bold rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-1 whitespace-nowrap";
         btnAction.onclick = revealNextY;
         
         btnContainer.style.display = 'flex';
         canvas.className = 'mode-disabled bg-gray-50';
         
-        showOverlay("상황 설명을 읽고 표를 채워봅시다", 'default', 3000);
+        showOverlay("상황 설명을 읽고 표를 채워봅시다", 'default', 2500);
         if(ctx) render(); 
     }
 
@@ -354,7 +355,7 @@
             initStep1();
         } else if(state.step === 2) {
             state.userPoints = [];
-            showOverlay("표에 나타난 순서쌍을 그래프 위에 순서대로 찍어 나타내봅시다", 'default', 3000);
+            showOverlay("표에 나타난 순서쌍을 그래프 위에 순서대로 찍어 나타내봅시다", 'default', 2500);
             render();
         } else if(state.step >= 3) {
             state.step = 3;
@@ -362,7 +363,7 @@
             state.isDragging = false;
             canvas.classList.remove('mode-plot');
             canvas.classList.add('mode-draw');
-            showOverlay("훌륭해요! 마지막으로 점들을 선으로 이어 그래프로 나타내봅시다.", 'default', 3000);
+            showOverlay("훌륭해요! 마지막으로 점들을 선으로 이어 그래프로 나타내봅시다.", 'default', 2500);
             render();
         }
     }
@@ -373,22 +374,22 @@
     function showOverlay(htmlText, type = 'default', duration = 2000) {
         overlayText.innerHTML = htmlText;
         
-        overlayBox.className = "bg-white px-5 py-4 md:px-6 md:py-5 rounded-2xl shadow-2xl text-center max-w-md transform scale-100 transition-transform duration-300 border-4 ";
+        overlayBox.className = "bg-white px-5 py-4 rounded-2xl shadow-2xl text-center max-w-md transform scale-100 transition-transform duration-300 border-4 ";
         if (type === 'error') {
             overlayBox.className += "border-red-400";
-            overlayText.className = "text-base md:text-lg font-bold text-red-600 leading-relaxed";
+            overlayText.className = "text-sm md:text-base font-bold text-red-600 leading-relaxed";
         } else if (type === 'success') {
             overlayBox.className += "border-green-400";
-            overlayText.className = "text-base md:text-lg font-bold text-green-700 leading-relaxed";
+            overlayText.className = "text-sm md:text-base font-bold text-green-700 leading-relaxed";
         } else {
             overlayBox.className += "border-blue-400";
-            overlayText.className = "text-base md:text-lg font-bold text-blue-800 leading-relaxed";
+            overlayText.className = "text-sm md:text-base font-bold text-blue-800 leading-relaxed";
         }
 
         renderMathInElement(overlayText, {delimiters: [{left: "$", right: "$", display: false}], throwOnError: false});
         
         overlay.classList.remove('hidden');
-        void overlay.offsetWidth; // 강제 렌더링
+        void overlay.offsetWidth; 
         overlay.classList.remove('opacity-0');
         
         if (overlayTimer) clearTimeout(overlayTimer);
@@ -409,20 +410,21 @@
     }
 
     /* ---------------------------------------------------------------------
-       가로형 표 빌드 및 제어
+       가로형 표 빌드 및 제어 (상하 패딩 압축)
        --------------------------------------------------------------------- */
     function buildHorizontalTable() {
         const sit = CONFIG.situations[currentSitIdx];
         const rowX = document.getElementById('row-x');
         const rowY = document.getElementById('row-y');
         
-        rowX.innerHTML = `<th class="bg-gray-200 border border-gray-400 p-1 w-16 md:w-20 break-keep text-black font-normal">${sit.xLabel}</th>`;
-        rowY.innerHTML = `<th class="bg-gray-200 border border-gray-400 p-1 w-16 md:w-20 break-keep text-black font-normal">${sit.yLabel}</th>`;
+        // padding y를 py-0.5 로 줄여서 표 높이를 슬림하게
+        rowX.innerHTML = `<th class="bg-gray-200 border border-gray-400 py-0.5 px-1 w-14 md:w-20 break-keep text-black font-normal">${sit.xLabel}</th>`;
+        rowY.innerHTML = `<th class="bg-gray-200 border border-gray-400 py-0.5 px-1 w-14 md:w-20 break-keep text-black font-normal">${sit.yLabel}</th>`;
         
         sit.data.forEach((row, index) => {
-            rowX.innerHTML += `<td id="td-x-${index}" class="bg-white border border-gray-300 p-1 text-black font-normal">$${row.x}$</td>`;
+            rowX.innerHTML += `<td id="td-x-${index}" class="bg-white border border-gray-300 py-0.5 px-1 text-black font-normal">$${row.x}$</td>`;
             let yContent = row.hidden ? `<span class="text-black font-normal">?</span>` : `$${row.y}$`;
-            rowY.innerHTML += `<td id="td-y-${index}" class="bg-white border border-gray-300 p-1 text-black font-normal">${yContent}</td>`;
+            rowY.innerHTML += `<td id="td-y-${index}" class="bg-white border border-gray-300 py-0.5 px-1 font-medium">${yContent}</td>`;
         });
         
         renderMathInElement(rowX, {delimiters: [{left: "$", right: "$", display: false}]});
@@ -436,7 +438,6 @@
             const targetIdx = state.hiddenIndices[state.revealCount];
             const tdY = document.getElementById(`td-y-${targetIdx}`);
             
-            // 정답으로 확인된 y값만 파란색(text-blue-600)으로 변경 (굵기는 font-normal 유지)
             tdY.innerHTML = `<span class="text-blue-600 font-normal">$${sit.data[targetIdx].y}$</span>`;
             renderMathInElement(tdY, {delimiters: [{left: "$", right: "$", display: false}]});
             
@@ -445,13 +446,13 @@
             if (state.revealCount >= state.hiddenIndices.length) {
                 state.step = 2;
                 
-                btnAction.innerHTML = `<span>점 정답 확인</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>`;
-                btnAction.className = "px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-1.5 whitespace-nowrap w-full md:w-auto";
+                btnAction.innerHTML = `<span>점 정답 확인</span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>`;
+                btnAction.className = "px-2 py-1.5 md:px-3 md:py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm font-bold rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-1 whitespace-nowrap";
                 btnAction.onclick = checkPlotting;
 
                 canvas.classList.remove('mode-disabled');
                 canvas.classList.add('mode-plot');
-                showOverlay("표에 나타난 순서쌍을 그래프 위에 순서대로 찍어 나타내봅시다.<br><span class='text-sm font-normal mt-2 block text-green-900'>(모두 찍은 후 <b>[점 정답 확인]</b> 버튼 클릭)</span>", 'success', 5000);
+                showOverlay("표에 나타난 순서쌍을 그래프 위에 순서대로 찍어 나타내봅시다.<br><span class='text-xs font-normal mt-1 block text-green-900'>(모두 찍은 후 <b>[점 정답 확인]</b> 버튼 클릭)</span>", 'success', 5000);
             }
         }
     }
@@ -483,7 +484,7 @@
     }
 
     /* ---------------------------------------------------------------------
-       캔버스 렌더링 엔진 (논리 좌표 <-> 화면 좌표 동기화)
+       캔버스 렌더링 엔진 (패딩을 늘려 전체 그래프 크기를 알맞게 축소)
        --------------------------------------------------------------------- */
     function resizeCanvas() {
         const dpr = window.devicePixelRatio || 1;
@@ -498,8 +499,9 @@
         const mathWidth = sit.axis.xMax - sit.axis.xMin;
         const mathHeight = sit.axis.yMax - sit.axis.yMin;
         
-        const padX = mathWidth * 0.05;
-        const padY = mathHeight * 0.08; 
+        // 캔버스 내부에 여백(패딩)을 훨씬 더 많이 확보하여 그래프를 살짝 작게 그립니다.
+        const padX = mathWidth * 0.12;
+        const padY = mathHeight * 0.15; 
 
         renderParams.ppuX = rect.width / (mathWidth + padX * 2);
         renderParams.ppuY = rect.height / (mathHeight + padY * 2);
@@ -565,7 +567,7 @@
         ctx.lineWidth = 1;
         ctx.strokeStyle = "#D1D5DB"; 
         
-        ctx.font = "bold 14px sans-serif"; 
+        ctx.font = "bold 13px sans-serif"; 
         ctx.fillStyle = "#000000"; 
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -576,7 +578,7 @@
         for (let x = 0; x <= sit.axis.xMax; x += sit.grid.xStep) drawXGrid(x, sit);
         for (let x = -sit.grid.xStep; x >= sit.axis.xMin; x -= sit.grid.xStep) drawXGrid(x, sit);
 
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.strokeStyle = "#000000"; 
         ctx.fillStyle = "#000000";
 
@@ -633,7 +635,7 @@
     }
 
     function drawPoints() {
-        ctx.font = "bold 14px sans-serif";
+        ctx.font = "bold 13px sans-serif";
         state.userPoints.forEach((pt) => {
             const px = mathToCanvas(pt.x, pt.y);
             ctx.beginPath(); ctx.arc(px.x, px.y, 6, 0, 2 * Math.PI);
@@ -655,9 +657,7 @@
             return;
         }
         
-        // 터치 드래그 스크롤 방어
         if (e.type === 'touchstart') {
-            // 태블릿 환경에서 버튼/드롭다운 이외의 영역 터치 시 스크롤만 막음
             if(e.target.tagName !== 'SELECT' && e.target.tagName !== 'BUTTON') {
                 e.preventDefault();
             }
@@ -667,7 +667,6 @@
         const mathPos = canvasToMath(clickPx.x, clickPx.y);
 
         if (state.step === 2) {
-            // 1. 이미 찍혀있는 점 근처를 눌렀는지 확인 (삭제 모드)
             let foundIdx = -1;
             for(let i=0; i<state.userPoints.length; i++){
                 const ptPx = mathToCanvas(state.userPoints[i].x, state.userPoints[i].y);
@@ -680,26 +679,23 @@
             if (foundIdx !== -1) {
                 state.userPoints.splice(foundIdx, 1);
             } else {
-                // 2. 점 추가 모드
                 const sit = CONFIG.situations[currentSitIdx];
                 let snappedPt = null;
                 
-                // 정답 점 근처 우선 스냅
                 for (let pt of sit.data) {
                     const ptPx = mathToCanvas(pt.x, pt.y);
-                    if (Math.hypot(clickPx.x - ptPx.x, clickPx.y - ptPx.y) <= 50) {
+                    if (Math.hypot(clickPx.x - ptPx.x, clickPx.y - ptPx.y) <= 40) {
                         snappedPt = { x: pt.x, y: pt.y };
                         break;
                     }
                     const swappedPx = mathToCanvas(pt.y, pt.x);
-                    if (Math.hypot(clickPx.x - swappedPx.x, clickPx.y - swappedPx.y) <= 50) {
+                    if (Math.hypot(clickPx.x - swappedPx.x, clickPx.y - swappedPx.y) <= 40) {
                         snappedPt = { x: pt.y, y: pt.x };
                         break;
                     }
                 }
                 
                 if (!snappedPt) {
-                    // 축 스텝을 고려한 근사 좌표 계산 대신 소격자에도 쉽게 찍히게 1단위로 반올림
                     const snapX = Math.round(mathPos.x);
                     const snapY = Math.round(mathPos.y);
                     snappedPt = { x: snapX, y: snapY };
@@ -721,7 +717,6 @@
             let closestPt = null;
             let minDist = Infinity;
             
-            // 3. 선 긋기: 시작점을 강제 격자 반올림이 아니라, 화면의 실제 정답 점들 중 가장 가까운 놈으로 잡기 (소격자 버그 픽스)
             sit.data.forEach((pt) => {
                 const ptPx = mathToCanvas(pt.x, pt.y);
                 const dist = Math.hypot(clickPx.x - ptPx.x, clickPx.y - ptPx.y);
@@ -753,14 +748,12 @@
         if (e.type === 'touchend' && e.cancelable) e.preventDefault();
         
         const clickPx = getEventPos(e);
-        const mathPos = canvasToMath(clickPx.x, clickPx.y);
         const sit = CONFIG.situations[currentSitIdx];
         
         let closestPt = null;
         let minDist = Infinity;
         let endIdx = -1;
 
-        // 드래그를 놓은 위치에서 가장 가까운 목표 점 찾기 (소격자 버그 픽스)
         sit.data.forEach((pt, idx) => {
             const ptPx = mathToCanvas(pt.x, pt.y);
             const dist = Math.hypot(clickPx.x - ptPx.x, clickPx.y - ptPx.y);
@@ -772,12 +765,10 @@
         });
         
         let startIdx = -1;
-
         sit.data.forEach((pt, idx) => {
             if (pt.x === state.dragStartMath.x && pt.y === state.dragStartMath.y) startIdx = idx;
         });
         
-        // 50 픽셀 이내에 정확히 떨구었을 때만 인정
         if (startIdx !== -1 && endIdx !== -1 && startIdx !== endIdx && minDist <= 50) {
             if (Math.abs(startIdx - endIdx) === 1) {
                 const edgeIndex = Math.min(startIdx, endIdx); 
@@ -789,10 +780,7 @@
                         state.step = 4;
                         canvas.classList.remove('mode-draw');
                         
-                        // 성공 사운드 재생 🎵
                         playSuccessSound();
-                        
-                        // 완료 문구 표시
                         showOverlay("🎉 <b>완벽해요!</b><br>주어진 상황을 아름다운 그래프로 나타냈네요!!", 'success', 0);
                     }
                 }
