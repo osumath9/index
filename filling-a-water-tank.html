@@ -35,23 +35,36 @@
 
     <div class="max-w-6xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
         
-        <!-- 대주제 타이틀 및 성취기준 안내 -->
+        <!-- 대주제 타이틀 -->
         <div class="bg-blue-600 text-white p-6">
-            <div class="flex items-start gap-4">
+            <div class="flex items-center gap-4">
                 <div class="bg-white text-blue-600 font-black text-xl rounded-full w-10 h-10 flex items-center justify-center shrink-0">📊</div>
-                <div>
-                    <h1 class="text-xl md:text-2xl font-bold leading-snug">
-                        [중1 좌표평면과 그래프] 물통 모양에 따른 실시간 그래프 탐구하기
-                    </h1>
-                    <p class="text-blue-100 text-sm mt-1">
-                        성취기준: 다양한 상황을 그래프로 나타내고, 시간의 흐름에 따른 변화를 직관적으로 해석할 수 있다.
-                    </p>
-                </div>
+                <h1 class="text-xl md:text-2xl font-bold leading-snug">
+                    물통 모양에 따른 그래프 해석하기
+                </h1>
             </div>
         </div>
 
         <div class="p-6 md:p-8">
             
+            <!-- 물통 모양 4종 선택기 (맨 위로 이동) -->
+            <div class="mb-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button class="tab-btn tab-active border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape1">
+                        모양 (1)
+                    </button>
+                    <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape2">
+                        모양 (2)
+                    </button>
+                    <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape3">
+                        모양 (3)
+                    </button>
+                    <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape4">
+                        모양 (4)
+                    </button>
+                </div>
+            </div>
+
             <!-- 실시간 동적 피드백/발문 메시지 -->
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6 transition-colors duration-300" id="feedback-box">
                 <p id="feedback-msg" class="text-lg md:text-xl font-bold text-blue-800">
@@ -82,28 +95,8 @@
             <!-- 하단 컨트롤 영역 -->
             <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col gap-6">
                 
-                <!-- 탭 1. 물통 모양 4종 선택기 -->
+                <!-- 구동 조작 도구 -->
                 <div>
-                    <span class="text-lg font-bold mb-3 block text-slate-700">1. 탐구할 물통 모양 선택:</span>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <button class="tab-btn tab-active border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape1">
-                            모양 (1)
-                        </button>
-                        <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape2">
-                            모양 (2)
-                        </button>
-                        <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape3">
-                            모양 (3)
-                        </button>
-                        <button class="tab-btn tab-inactive border-2 py-3 px-4 rounded-lg font-bold text-lg" data-shape="shape4">
-                            모양 (4)
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 탭 2. 구동 조작 도구 -->
-                <div>
-                    <span class="text-lg font-bold mb-3 block text-slate-700">2. 시뮬레이션 제어:</span>
                     <div class="flex flex-wrap gap-4">
                         <button id="btn-play" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl text-xl shadow-md transition-colors">
                             ▶ 물 채우기 시작
