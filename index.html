@@ -69,10 +69,11 @@
             // 3. 교사 리모컨 신호 감시
             const classStepRef = ref(database, 'currentStep');
             const loadingEl = document.getElementById('loading');
-            const frames = {
+const frames = {
                 1: document.getElementById('frame-step1'),
                 2: document.getElementById('frame-step2'),
-                3: document.getElementById('frame-step3')
+                3: document.getElementById('frame-step3'),
+                4: document.getElementById('frame-step4') 
             };
 
             onValue(classStepRef, (snapshot) => {
@@ -112,9 +113,15 @@
         <p class="text-xl font-semibold text-gray-700">선생님의 화면 전환을 대기 중입니다...</p>
     </div>
 
-  <iframe id="frame-step1" class="hidden absolute inset-0" src="investigation-of-graph-shapes.html"></iframe>
+<iframe id="frame-step1" class="hidden absolute inset-0" src="investigation-of-graph-shapes.html"></iframe>
     <iframe id="frame-step2" class="hidden absolute inset-0" src="filling-a-water-tank.html"></iframe>
     <iframe id="frame-step3" class="hidden absolute inset-0" src="drawing-graph-numerically.html"></iframe>
+
+    <div id="frame-step4" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-200 z-40">
+        <div class="text-7xl mb-6 animate-bounce">👀</div>
+        <h2 class="text-4xl font-black text-gray-800 mb-4">선생님을 주목해 주세요!</h2>
+        <p class="text-lg text-gray-600 font-medium bg-white px-4 py-2 rounded-full shadow-sm border">현재 기기 조작이 일시 중지되었습니다.</p>
+    </div>
 
 </body>
 </html>
